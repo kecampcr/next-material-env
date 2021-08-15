@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: test-sv
+  namespace: test
+spec:
+  selector:
+    app: test
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-dp
+  namespace: test
+spec:
+  selector:
+      matchLabels:
+        app: test
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+        - name: test
+          image: test:v0.0.1
+          imagePullPolicy: Always
+# COMPORTAMIENTO INTERNO          
+          stdin: true
+          tty: true
+          command: ["yarn", "start"]
+          ports:
+            - containerPort: 3000
+
+# RECURSOS Y LIMITES
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "200m"
+            limits:
+              memory: "128Mi"
+              cpu: "400m"
+#VARIABLES DE AMBIENTE              
+          env:
+          - name: API_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: test-cm
+                key: API_ENDPOINT
+
+          - name: KEYCLOAK_URL
+            valueFrom:
+              configMapKeyRef:
+                name: test-cm
+                key: KEYCLOAK_URL
+
+          - name: KEYCLOAK_REALM
+            valueFrom:
+              configMapKeyRef:
+                name: test-cm
+                key: KEYCLOAK_REALM
+
+          - name: KEYCLOAK_CLIENTID
+            valueFrom:
+              configMapKeyRef:
+                name: test-cm
+                key: KEYCLOAK_CLIENTID
+                                  
+          - name: DEBUG_MODE
+            value: "true"
+
+          - name: CHOKIDAR_USEPOLLING
+            value: "true"
+          
+          - name: VERSION
+            value: "v0.0.7"
+
+          - name: SECRET
+            value: "EXTERNAL SECRET VALUE"
+
